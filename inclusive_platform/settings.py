@@ -42,6 +42,15 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React dev server
+    "http://127.0.0.1:3000",
+]
+
+# For development only:
+CORS_ALLOW_ALL_ORIGINS = True 
+
 ROOT_URLCONF = 'inclusive_platform.urls'
 
 TEMPLATES = [
@@ -75,6 +84,8 @@ DATABASES = {
         'PORT': '5432',      
     }
 }
+
+
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
