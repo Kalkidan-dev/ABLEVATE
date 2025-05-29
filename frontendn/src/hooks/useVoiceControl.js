@@ -1,31 +1,60 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
-const useVoiceControl = (onTranscript) => {
+const useVoiceControl = (onTranscript, setListening) => {
+  const recognitionRef = useRef(null);
+
   useEffect(() => {
-    if (!('SpeechRecognition' in window) && !('webkitSpeechRecognition' in window)) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
       console.warn('Speech Recognition API not supported in this browser.');
       return;
     }
 
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    const recognition = new SpeechRecognition();
     recognition.continuous = true;
+    recognition.interimResults = false;
     recognition.lang = 'en-US';
 
     recognition.onresult = (event) => {
-      const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+      const transcript = event.results[event.resultIndex][0].transcript.trim().toLowerCase();
       onTranscript(transcript);
+    };
+
+    recognition.onstart = () => {
+      setListening(true);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
     };
 
     recognition.onerror = (event) => {
       console.error('Speech recognition error:', event.error);
+      setListening(false);
     };
 
-    recognition.start();
+    recognitionRef.current = recognition;
 
     return () => {
       recognition.stop();
     };
-  }, [onTranscript]);
+  }, [onTranscript, setListening]);
+
+  const toggleListening = () => {
+    const recognition = recognitionRef.current;
+    if (!recognition) return;
+
+    // Start/stop based on internal running state
+    try {
+      recognition.start();
+    } catch (e) {
+      // Already started; stop instead
+      recognition.stop();
+    }
+  };
+
+  return toggleListening;
 };
 
 export default useVoiceControl;
