@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import NavigationBar from '../components/layout/Navbar';
+
 import '../styles/Home.css';
 
 const recognition =
@@ -58,7 +58,7 @@ const Home = () => {
 
   return (
     <>
-      <NavigationBar />
+      
       <div className="home-container">
         <h1>Welcome to ABLEVATE</h1>
         <p>
