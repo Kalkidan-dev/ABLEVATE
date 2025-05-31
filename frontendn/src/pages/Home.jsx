@@ -65,10 +65,16 @@ const Home = () => {
           An inclusive learning platform for visually and hearing-impaired students. Empower your education with assistive technology and accessible content.
         </p>
 
-        <div className="home-btn-group">
-          <Link to="/login" className="home-btn home-btn-login">Login</Link>
-          <Link to="/register" className="home-btn home-btn-register">Register</Link>
+        <div className="home-search-group">
+          <input
+            type="text"
+            className="home-search-input"
+            placeholder="Search courses, topics, or instructors..."
+            aria-label="Search"
+          />
+          <button className="home-search-btn">🔍 Search</button>
         </div>
+
 
         <div className="voice-control">
           <button

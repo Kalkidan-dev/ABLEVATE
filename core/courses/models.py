@@ -1,6 +1,12 @@
 from django.db import models
 from core.accounts.models import CustomUser
 from django.utils.text import slugify
+from django.core.exceptions import ValidationError
+
+
+def validate_braille_file(value):
+    if not value.name.endswith(('.brf', '.txt')):
+        raise ValidationError("Only .brf and .txt files are allowed for Braille content.")
 
 
 class Course(models.Model):
@@ -59,18 +65,28 @@ class Lesson(models.Model):
     title = models.CharField(max_length=255)
     content = models.TextField()
     video_url = models.URLField(blank=True, null=True)
-    
+
     video_file = models.FileField(
         upload_to='videos/',
         blank=True,
         null=True,
         help_text="Upload a video file if not using a URL.")
     
+    audio_file = models.FileField(upload_to='audios/', blank=True, null=True)
+    pdf_file = models.FileField(upload_to='pdfs/', blank=True, null=True)
     downloadable_resource = models.FileField(upload_to='lesson_resources/', blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_free = models.BooleanField(default=False, help_text="Is this lesson free for all users?")
+    transcript = models.TextField(blank=True, help_text="Transcript of audio/video")
+    alt_text = models.CharField(max_length=255, blank=True, help_text="Alt text for PDFs/images")
+    braille_file = models.FileField(
+        upload_to='braille/',
+        blank=True,
+        null=True,
+        validators=[validate_braille_file],
+        help_text="Upload .brf or .txt Braille-compatible content."
+)
     captions = models.TextField(blank=True, help_text="Include text captions for hearing-impaired users.")
-    alt_text = models.TextField(blank=True, help_text="Alternative text for any images used.")
     screen_reader_hint = models.TextField(blank=True, help_text="Special notes or structure for screen readers.")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -79,9 +95,11 @@ class Lesson(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.course.title})"
+    
 class LessonProgress(models.Model):
-    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    student = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="lesson_progress")
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name="progress")
+    viewed_at = models.DateTimeField(null=True, blank=True)
     completed = models.BooleanField(default=False)
     completed_at = models.DateTimeField(null=True, blank=True)
 

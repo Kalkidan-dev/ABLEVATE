@@ -1,6 +1,21 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [],
+  darkMode: 'class',
+  content: ['./src/**/*.{js,jsx,ts,tsx}'],
+  safelist: [
+    'bg-braille', // Braille-friendly background
+    'bg-light', // Light theme background
+    'bg-dark', // Dark theme background
+    'text-primary', // Primary color for text
+    'text-secondary', // Secondary color for text
+    'text-accent', // Accent color for highlights
+    'text-error', // Error color for alerts
+    'text-success', // Success color for confirmations
+  ],
+  important: true, // Ensures Tailwind styles take precedence
+  corePlugins: {
+    preflight: true, // Enable Tailwind's base styles
+  },
   theme: {
     extend: {
      colors: {

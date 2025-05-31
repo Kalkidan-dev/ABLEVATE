@@ -1,130 +1,103 @@
-import React, { useReducer } from 'react';
-import useVoiceControl from '../hooks/useVoiceControl';  // Adjust path as needed
-
-// Reducer function
-const formReducer = (state, action) => {
-  switch (action.type) {
-    case 'SET_FORM_FIELD':
-      return {
-        ...state,
-        formData: {
-          ...state.formData,
-          [action.field]: action.value,
-        },
-      };
-    case 'SUBMIT_LOGIN_FORM':
-      return {
-        ...state,
-        submitting: true,
-      };
-    case 'SUBMIT_SUCCESS':
-      return {
-        ...state,
-        submitting: false,
-        formData: { email: '', password: '' },
-      };
-    case 'SUBMIT_FAILURE':
-      return {
-        ...state,
-        submitting: false,
-      };
-    default:
-      return state;
-  }
-};
-
-// Initial state
-const initialState = {
-  formData: { email: '', password: '' },
-  submitting: false,
-};
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import useVoiceControl from '../../hooks/useVoiceControl';
+import useVoiceCommands from '../../hooks/useVoiceCommands';
 
 const LoginForm = () => {
-  const [state, dispatch] = useReducer(formReducer, initialState);
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    remember: false,
+  });
 
-  // Handler for voice commands
-  const handleVoiceCommand = (command) => {
-    const lowerCmd = command.toLowerCase();
+  const [showPassword, setShowPassword] = useState(false);
+  const [feedback, setFeedback] = useState('');
+  const [listening, setListening] = useState(false);
 
-    if (lowerCmd.startsWith('set email to ')) {
-      const email = lowerCmd.replace('set email to ', '').trim();
-      dispatch({ type: 'SET_FORM_FIELD', field: 'email', value: email });
-    } else if (lowerCmd.startsWith('set password to ')) {
-      const password = lowerCmd.replace('set password to ', '').trim();
-      dispatch({ type: 'SET_FORM_FIELD', field: 'password', value: password });
-    } else if (lowerCmd === 'submit login form') {
-      dispatch({ type: 'SUBMIT_LOGIN_FORM' });
-      handleSubmit(); // call submit function (defined below)
-    } else {
-      console.log('Voice command not recognized:', command);
-    }
-  };
+  const navigate = useNavigate();
 
-  // Connect voice commands to useVoiceControl hook
-  useVoiceControl(handleVoiceCommand);
-
-  // Manual input change handler
-  const handleInputChange = (e) => {
-    dispatch({
-      type: 'SET_FORM_FIELD',
-      field: e.target.name,
-      value: e.target.value,
-    });
-  };
-
-  // Simulated async submit handler
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     if (e) e.preventDefault();
 
-    dispatch({ type: 'SUBMIT_LOGIN_FORM' });
-
-    // Simulate API call delay
-    try {
-      // Replace this with your actual login API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      console.log('Form submitted:', state.formData);
-      dispatch({ type: 'SUBMIT_SUCCESS' });
-
-      // Optionally: display success message or redirect user
-    } catch (error) {
-      console.error('Login failed:', error);
-      dispatch({ type: 'SUBMIT_FAILURE' });
-      // Optionally: display error message to user
+    if (!formData.email || !formData.password) {
+      setFeedback('Email and password are required');
+      return;
     }
+
+    console.log('Logging in with', formData);
+    setFeedback('Login successful!');
   };
 
+  const handleVoiceCommand = useVoiceCommands({
+    formData,
+    setFormData,
+    setShowPassword,
+    handleSubmit,
+    setFeedback,
+    navigate,
+  });
+
+  const toggleListening = useVoiceControl(handleVoiceCommand, setListening);
+
   return (
-    <form onSubmit={handleSubmit} className="max-w-sm mx-auto p-4">
-      <input
-        name="email"
-        type="email"
-        value={state.formData.email}
-        onChange={handleInputChange}
-        placeholder="Email"
-        required
-        className="mb-2 p-2 border rounded w-full"
-      />
-      <input
-        name="password"
-        type="password"
-        value={state.formData.password}
-        onChange={handleInputChange}
-        placeholder="Password"
-        required
-        className="mb-4 p-2 border rounded w-full"
-      />
+    <div className="max-w-md mx-auto mt-10 p-6 border rounded-md shadow-md bg-white">
+      <h2 className="text-2xl font-bold mb-4">Login</h2>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block font-medium">Email</label>
+          <input
+            type="email"
+            className="w-full border px-3 py-2 rounded"
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Password</label>
+          <input
+            type={showPassword ? 'text' : 'password'}
+            className="w-full border px-3 py-2 rounded"
+            value={formData.password}
+            onChange={(e) =>
+              setFormData({ ...formData, password: e.target.value })
+            }
+          />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={formData.remember}
+            onChange={(e) =>
+              setFormData({ ...formData, remember: e.target.checked })
+            }
+          />
+          <label>Remember Me</label>
+        </div>
+
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+        >
+          Login
+        </button>
+      </form>
+
+      <div className="mt-4 text-sm text-gray-600">{feedback}</div>
+
       <button
-        type="submit"
-        disabled={state.submitting}
-        className="bg-blue-600 text-white py-2 px-4 rounded"
+        onClick={toggleListening}
+        className={`mt-4 px-4 py-2 rounded ${
+          listening ? 'bg-red-500' : 'bg-green-500'
+        } text-white`}
       >
-        {state.submitting ? 'Logging in...' : 'Login'}
+        {listening ? 'Stop Listening' : 'Start Voice Control'}
       </button>
-      <p className="mt-2 text-sm text-gray-600">
-        Use voice commands like "Set email to example@domain.com", "Set password to 123456", or "Submit login form".
-      </p>
-    </form>
+    </div>
   );
 };
 

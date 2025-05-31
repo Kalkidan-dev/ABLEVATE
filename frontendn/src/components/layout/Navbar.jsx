@@ -1,15 +1,64 @@
-import React from 'react';
+import React, { useState } from 'react';
+import {
+  Navbar as BootstrapNavbar,
+  Nav,
+  Container,
+  Button,
+  ButtonGroup,
+} from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 
-const Navbar = () => (
-  <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
-    <h1 className="text-xl font-bold">EduAccess</h1>
-    <div className="space-x-4">
-      <Link to="/">Home</Link>
-      <Link to="/courses">Courses</Link>
-      <Link to="/dashboard">Dashboard</Link>
-    </div>
-  </nav>
-);
+const NavigationBar = () => {
+  const { theme, toggleTheme, enableBrailleMode } = useTheme();
+  const [expanded, setExpanded] = useState(false); // handle toggle state
 
-export default Navbar;
+  return (
+    <BootstrapNavbar
+      expand="lg"
+      expanded={expanded}
+      onToggle={() => setExpanded(!expanded)}
+      bg={theme === 'light' ? 'primary' : theme === 'dark' ? 'dark' : 'secondary'}
+      variant={theme === 'light' ? 'light' : 'dark'}
+      className="px-3"
+    >
+      <Container>
+        <BootstrapNavbar.Brand as={Link} to="/">
+          ABLEVATE
+        </BootstrapNavbar.Brand>
+
+        {/* Toggle button for smaller screens */}
+        <BootstrapNavbar.Toggle aria-controls="main-navbar" />
+
+        {/* Collapsible content */}
+        <BootstrapNavbar id="main-navbar" className="justify-content-between">
+          <Nav className="me-auto">
+            <Nav.Link as={Link} to="/login">Login</Nav.Link>
+            <Nav.Link as={Link} to="/register">Register</Nav.Link>
+            <Nav.Link as={Link} to="/about">About</Nav.Link>
+            <Nav.Link as={Link} to="/contact">Contact</Nav.Link>
+            <Nav.Link as={Link} to="/privacy">Privacy</Nav.Link>
+          </Nav>
+
+          {/* Theme & Braille Toggle */}
+          <ButtonGroup>
+            <Button
+              
+              onClick={toggleTheme}
+            >
+              {theme === 'dark' ? '☀️ ' : '🌙 '}
+            </Button>
+            <Button
+              variant={theme === 'braille' ? 'success' : 'outline-success'}
+              onClick={enableBrailleMode}
+            >
+              ♿ 
+            </Button>
+          </ButtonGroup>
+        </BootstrapNavbar>
+      </Container>
+    </BootstrapNavbar>
+  );
+};
+
+export default NavigationBar;
