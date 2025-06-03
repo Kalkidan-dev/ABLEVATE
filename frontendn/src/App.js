@@ -1,28 +1,34 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { RoleProvider } from './context/RoleContext';
+
 import Layout from './components/layout/Layout';
+import DashboardLayout from './components/layout/DashboardLayout';
+import ProtectedRoute from './routes/ProtectedRoute';
+import axios from 'axios';
 
 import Home from './pages/Home';
-// import CourseList from './pages/CourseList';
-// import CourseDetail from './pages/CourseDetail';
-
-import Sidebar from './components/layout/Sidebar';
-
-// import DashboardStudent from './pages/DashboardStudent';
 import DashboardInstructor from './pages/DashboardInstructor';
-// import useVoiceControl from './hooks/useVoiceControl';
-
-
+import DashboardStudent from './pages/DashboardStudent';
 import UploadCourse from './pages/UploadCourse';
 import AdminPanel from './pages/AdminPanel';
 import Login from './pages/Login';
-
-
+import Sidebar from './components/layout/Sidebar';
 
 const App = () => {
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    axios.get('http://localhost:8000/')
+      .then(res => setMessage(res.data.message))
+      .catch(err => console.error('API error', err));
+  }, []);
+
+  console.log('API message:', message);
+
   return (
     <AuthProvider>
       <RoleProvider>
@@ -30,23 +36,52 @@ const App = () => {
           <Router>
             <div className="app-container">
               <Routes>
-                {/* <Route path="/" element={<Home />} />
-                <Route path="/student-dashboard" element={<DashboardStudent />} /> */}
+                {/* Public routes */}
                 <Route path="/" element={<Layout><Home /></Layout>} />
-                <Route path="/instructor-dashboard" element={<DashboardInstructor />} />
-                
-                <Route path="/sidebar" element={<Sidebar />} />
-                {/* <Route path="/" element={<CourseList />} />
-                <Route path="/courses" element={<CourseList />} />
-                <Route path="/courses/:id" element={<CourseDetail />} /> */}
-                <Route path="/upload-course" element={<UploadCourse />} />
-                <Route path="/admin-panel" element={<AdminPanel />} />
                 <Route path="/login" element={<Layout><Login /></Layout>} />
-                {/* Add other routes here */}
-              </Routes>
+                <Route path="/sidebar" element={<Sidebar />} />
 
-              {/* VoiceControl listens everywhere */}
-              {/* <useVoiceControl /> */}
+                {/* Protected routes */}
+                <Route 
+                  path="/instructor-dashboard" 
+                  element={
+                    <ProtectedRoute role="instructor">
+                      <DashboardLayout>
+                        <DashboardInstructor />
+                      </DashboardLayout>
+                    </ProtectedRoute>
+
+                  } 
+                />
+                
+                  <Route
+                      path="/student-dashboard"
+                      element={
+                        <ProtectedRoute role="student">
+                          <DashboardStudent />
+                        </ProtectedRoute>
+                      }
+                    />
+                <Route
+                  path="/upload-course"
+                  element={
+                    <ProtectedRoute role="instructor">
+                      <UploadCourse />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/admin-panel"
+                  element={
+                    <ProtectedRoute role="admin">
+                      <AdminPanel />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Add other protected or public routes as needed */}
+              </Routes>
             </div>
           </Router>
         </ThemeProvider>
