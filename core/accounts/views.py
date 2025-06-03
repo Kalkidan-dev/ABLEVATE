@@ -3,16 +3,14 @@ from .serializers import RegisterSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth import get_user_model
+from .serializers import CustomTokenObtainPairSerializer
 
 User = get_user_model()
 
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data.update({'role': self.user.role})
-        return data
 
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 
 class IsAdminUser(permissions.BasePermission):
     def has_permission(self, request, view):
