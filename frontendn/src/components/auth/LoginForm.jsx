@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import useVoiceControl from '../../hooks/useVoiceControl';
 import useVoiceCommands from '../../hooks/useVoiceCommands';
+import { useAuth } from '../../context/AuthContext';
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
@@ -13,26 +15,72 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [listening, setListening] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
+
+    console.log('Submitted email:', formData.email);
+    console.log('Submitted password:', formData.password);
 
     if (!formData.email || !formData.password) {
       setFeedback('Email and password are required');
       return;
     }
 
-    console.log('Logging in with', formData);
-    setFeedback('Login successful!');
+    try {
+      setLoading(true);
+
+      const res = await axios.post('http://localhost:8000/api/token/', {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      const { access, refresh, role } = res.data;
+      console.log('ROLE FROM BACKEND:', role);
+
+      localStorage.setItem('access', access);
+      localStorage.setItem('refresh', refresh);
+      localStorage.setItem('role', role);
+
+      login({ token: access, role });
+
+      setFeedback('Login successful!');
+
+      if (role === 'student') {
+        navigate('/student-dashboard');
+      } else if (role === 'instructor') {
+        navigate('/instructor-dashboard');
+      } else if (role === 'admin') {
+        navigate('/admin-panel');
+      } else {
+        navigate('/');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setFeedback('Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVoiceCommand = useVoiceCommands({
     formData,
-    setFormData,
+    setFormData: (newData) =>
+      setFormData((prev) => ({
+        ...prev,
+        ...newData,
+      })),
     setShowPassword,
-    handleSubmit,
+    handleSubmit: () => {
+      // Delay to allow state to update before submission
+      setTimeout(() => {
+        handleSubmit();
+      }, 100);
+    },
     setFeedback,
     navigate,
   });
@@ -51,8 +99,9 @@ const LoginForm = () => {
             className="w-full border px-3 py-2 rounded"
             value={formData.email}
             onChange={(e) =>
-              setFormData({ ...formData, email: e.target.value })
+              setFormData((prev) => ({ ...prev, email: e.target.value }))
             }
+            required
           />
         </div>
 
@@ -63,8 +112,9 @@ const LoginForm = () => {
             className="w-full border px-3 py-2 rounded"
             value={formData.password}
             onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
+              setFormData((prev) => ({ ...prev, password: e.target.value }))
             }
+            required
           />
         </div>
 
@@ -73,7 +123,7 @@ const LoginForm = () => {
             type="checkbox"
             checked={formData.remember}
             onChange={(e) =>
-              setFormData({ ...formData, remember: e.target.checked })
+              setFormData((prev) => ({ ...prev, remember: e.target.checked }))
             }
           />
           <label>Remember Me</label>
@@ -82,12 +132,15 @@ const LoginForm = () => {
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          disabled={loading}
         >
-          Login
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
 
-      <div className="mt-4 text-sm text-gray-600">{feedback}</div>
+      {feedback && (
+        <div className="mt-4 text-sm text-red-600 font-medium">{feedback}</div>
+      )}
 
       <button
         onClick={toggleListening}
@@ -95,7 +148,7 @@ const LoginForm = () => {
           listening ? 'bg-red-500' : 'bg-green-500'
         } text-white`}
       >
-        {listening ? 'Stop Listening' : 'Start Voice Control'}
+        {listening ? 'Stop Voice Control' : 'Start Voice Control'}
       </button>
     </div>
   );
