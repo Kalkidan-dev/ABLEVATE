@@ -8,10 +8,23 @@ import {
 } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
+
 
 const NavigationBar = () => {
   const { theme, toggleTheme, enableBrailleMode } = useTheme();
   const [expanded, setExpanded] = useState(false); // handle toggle state
+  const navigate = useNavigate();
+
+  const role = localStorage.getItem('role');
+  const isLoggedIn = !!localStorage.getItem('access');
+const logout = () => {
+    localStorage.removeItem('access');
+    localStorage.removeItem('refresh');
+    localStorage.removeItem('role');
+    navigate('/login'); // or '/' if you prefer
+  };
+
 
   return (
     <BootstrapNavbar
@@ -33,11 +46,26 @@ const NavigationBar = () => {
         {/* Collapsible content */}
         <BootstrapNavbar id="main-navbar" className="justify-content-between">
           <Nav className="me-auto">
-            <Nav.Link as={Link} to="/login">Login</Nav.Link>
-            <Nav.Link as={Link} to="/register">Register</Nav.Link>
+            
+            {isLoggedIn && role === 'admin' && (
+          <Nav.Link as={Link} to="/register">Register</Nav.Link>
+        )}
             <Nav.Link as={Link} to="/about">About</Nav.Link>
             <Nav.Link as={Link} to="/contact">Contact</Nav.Link>
             <Nav.Link as={Link} to="/privacy">Privacy</Nav.Link>
+            
+            <Nav>
+        {!isLoggedIn ? (
+          <>
+            <Nav.Link as={Link} to="/login">Login</Nav.Link>
+           
+          </>
+        ) : (
+          <button onClick={logout} className="btn btn-danger">
+            Logout
+          </button>
+        )}
+      </Nav>
           </Nav>
 
           {/* Theme & Braille Toggle */}

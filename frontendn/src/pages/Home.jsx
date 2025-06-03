@@ -66,14 +66,14 @@ const Home = () => {
         </p>
 
         <div className="home-search-group">
-          <input
-            type="text"
-            className="home-search-input"
-            placeholder="Search courses, topics, or instructors..."
-            aria-label="Search"
-          />
-          <button className="home-search-btn">🔍 Search</button>
-        </div>
+            <input
+              type="text"
+              className="home-search-input"
+              placeholder="Search courses, topics, or instructors..."
+              aria-label="Search"
+            />
+            <button className="home-search-btn">🔍 Search</button>
+          </div>
 
 
         <div className="voice-control">

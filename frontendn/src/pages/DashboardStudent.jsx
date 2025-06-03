@@ -5,6 +5,7 @@ import CourseList from '../components/course/CourseList';
 const DashboardStudent = () => {
   return (
     <div className="p-6">
+      <div>Welcome, Student!</div>;
       <h2 className="text-2xl font-semibold mb-4">Your Courses</h2>
       <CourseList />
     </div>

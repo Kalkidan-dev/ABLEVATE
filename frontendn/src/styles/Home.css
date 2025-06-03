@@ -150,10 +150,12 @@ body {
 
 .home-search-group {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 2rem;
+  justify-content: center;  /* centers horizontally */
+  align-items: center;      /* centers vertically */
+  gap: 10px;                /* spacing between input and button */
+  height: 100px;            /* optional: set height for vertical centering */
 }
+
 
 .home-search-input {
   padding: 0.5rem 1rem;
