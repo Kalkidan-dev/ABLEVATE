@@ -6,7 +6,11 @@ class LessonAdmin(admin.ModelAdmin):
     list_display = ('title', 'course', 'order')
     search_fields = ('title',)
     list_filter = ('course',)
-    fields = ('title', 'content', 'video_url', 'captions', 'alt_text', 'screen_reader_hint', 'order', 'course')
+    fields = (
+        'title', 'content', 'video_url', 'captions',
+        'screen_reader_hint', 'order', 'course', 'video_file', 'audio_file', 'pdf_file', 'downloadable_resource','transcript'
+    #    , 'braille_file'
+    )
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
@@ -19,4 +23,5 @@ class EnrollmentAdmin(admin.ModelAdmin):
     list_display = ('student', 'course', 'enrolled_at')
     search_fields = ('student__email', 'course__title')
     list_filter = ('course',)
-    fields = ('student', 'course', 'enrolled_at')
+    readonly_fields = ('enrolled_at',)  
+    fields = ('student', 'course')  
