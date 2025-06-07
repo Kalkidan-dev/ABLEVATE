@@ -5,12 +5,11 @@ const LessonDetail = ({ lesson }) => {
   const [quizResults, setQuizResults] = useState({});
   const [score, setScore] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Utility to check for YouTube URLs
   const isYouTubeUrl = (url) =>
     url.includes('youtube.com') || url.includes('youtu.be');
 
-  // ESLint-friendly extractor for YouTube embed URL
   const convertYouTubeUrlToEmbed = (url) => {
     try {
       const regExp = /(?:youtube\.com\/(?:[^/]+\/.+|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?/\\s]{11})/;
@@ -28,10 +27,23 @@ const LessonDetail = ({ lesson }) => {
     setQuizResults(savedAnswers);
   }, [lesson.id]);
 
+  useEffect(() => {
+    if (Object.keys(quizResults).length > 0) {
+      setIsSaving(true);
+      localStorage.setItem(getLessonKey(lesson.id), JSON.stringify(quizResults));
+      setTimeout(() => setIsSaving(false), 500);
+    }
+  }, [quizResults, lesson.id]);
+
+  useEffect(() => {
+    if (score) {
+      document.querySelector('[role="status"]')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [score]);
+
   const handleOptionChange = (quizId, selectedOption) => {
     const updated = { ...quizResults, [quizId]: selectedOption };
     setQuizResults(updated);
-    localStorage.setItem(getLessonKey(lesson.id), JSON.stringify(updated));
   };
 
   const isFormComplete = lesson.quizzes.every(q => quizResults[q.id]);
@@ -58,7 +70,11 @@ const LessonDetail = ({ lesson }) => {
       });
       setIsSubmitted(true);
     } catch (error) {
-      alert('Failed to submit quiz. Please try again.');
+      if (error.response?.status === 401) {
+        alert('You must be logged in to submit the quiz.');
+      } else {
+        alert('Failed to submit quiz. Please try again.');
+      }
     }
   };
 
@@ -66,36 +82,43 @@ const LessonDetail = ({ lesson }) => {
     submitQuizToServer();
   };
 
+  const renderVideo = (url, index) => (
+    <div key={index} className="relative w-full pb-[56.25%] h-0">
+      {isYouTubeUrl(url) ? (
+        <iframe
+          className="absolute top-0 left-0 w-full h-full rounded"
+          src={convertYouTubeUrlToEmbed(url)}
+          title={`Lesson Video ${index + 1}`}
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        ></iframe>
+      ) : (
+        <video
+          controls
+          className="absolute top-0 left-0 w-full h-full rounded"
+          aria-label={`Lesson Video ${index + 1}`}
+        >
+          <source src={url} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      )}
+    </div>
+  );
+
+  const allVideos = Array.isArray(lesson.videos)
+    ? lesson.videos
+    : lesson.video_file
+    ? [lesson.video_file]
+    : [];
+
   return (
     <div className="lesson-detail p-6">
       <h2 className="text-2xl font-bold mb-4" id="lesson-title">{lesson.title}</h2>
 
-      {/* ✅ Multiple Video Support */}
-      {lesson.videos && lesson.videos.length > 0 && (
+      {allVideos.length > 0 && (
         <div className="mb-6 space-y-4">
-          {lesson.videos.map((videoUrl, index) => (
-            <div key={index}>
-              {isYouTubeUrl(videoUrl) ? (
-                <iframe
-                  className="w-full aspect-video rounded"
-                  src={convertYouTubeUrlToEmbed(videoUrl)}
-                  title={`Lesson Video ${index + 1}`}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
-              ) : (
-                <video
-                  controls
-                  className="w-full rounded"
-                  aria-label={`Lesson Video ${index + 1}`}
-                >
-                  <source src={videoUrl} type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
-              )}
-            </div>
-          ))}
+          {allVideos.map((url, index) => renderVideo(url, index))}
         </div>
       )}
 
@@ -114,47 +137,56 @@ const LessonDetail = ({ lesson }) => {
 
       <div className="lesson-content mb-6" dangerouslySetInnerHTML={{ __html: lesson.content }} />
 
-      <h3 className="text-xl font-semibold mb-2">Quiz</h3>
-      <form aria-labelledby="lesson-title">
-        {lesson.quizzes.map((quiz, idx) => (
-          <fieldset key={quiz.id} className="mb-6 p-4 border rounded" aria-describedby={`feedback-${quiz.id}`}>
-            <legend className="font-medium mb-2">{idx + 1}. {quiz.question}</legend>
-            {['A', 'B', 'C', 'D'].map(opt => (
-              <label key={opt} className="block">
-                <input
-                  type="radio"
-                  name={`quiz-${quiz.id}`}
-                  value={opt}
-                  checked={quizResults[quiz.id] === opt}
-                  onChange={() => handleOptionChange(quiz.id, opt)}
-                  disabled={isSubmitted}
-                  className="mr-2"
-                />
-                {quiz[`option_${opt.toLowerCase()}`]}
-              </label>
-            ))}
+      <section aria-labelledby="quiz-section">
+        <h3 id="quiz-section" className="text-xl font-semibold mb-2">Quiz</h3>
+        {isSaving && <p className="text-sm text-gray-500">Saving your answers...</p>}
 
-            {score && (
-              <p id={`feedback-${quiz.id}`} className={`mt-2 ${quizResults[quiz.id] === quiz.correct_option ? 'text-green-600' : 'text-red-600'}`}>
-                {quizResults[quiz.id] === quiz.correct_option ? 'Correct ✅' : 'Incorrect ❌'}
-                {quiz.explanation && (
-                  <span className="block text-gray-600">Explanation: {quiz.explanation}</span>
-                )}
-              </p>
-            )}
-          </fieldset>
-        ))}
+        <form aria-labelledby="lesson-title">
+          {lesson.quizzes.map((quiz, idx) => (
+            <fieldset key={quiz.id} className="mb-6 p-4 border rounded" aria-describedby={`feedback-${quiz.id}`}>
+              <legend className="font-medium mb-2">{idx + 1}. {quiz.question}</legend>
+              {['A', 'B', 'C', 'D'].map(opt => (
+                <label key={opt} className="block">
+                  <input
+                    type="radio"
+                    name={`quiz-${quiz.id}`}
+                    value={opt}
+                    checked={quizResults[quiz.id] === opt}
+                    onChange={() => handleOptionChange(quiz.id, opt)}
+                    disabled={isSubmitted}
+                    className="mr-2"
+                  />
+                  {quiz[`option_${opt.toLowerCase()}`]}
+                </label>
+              ))}
 
-        <button
-          type="button"
-          className={`px-6 py-2 rounded text-white ${isFormComplete && !isSubmitted ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
-          onClick={handleSubmit}
-          disabled={!isFormComplete || isSubmitted}
-          aria-disabled={!isFormComplete || isSubmitted}
-        >
-          Submit Quiz
-        </button>
-      </form>
+              {score && (
+                <p id={`feedback-${quiz.id}`} className={`mt-2 ${quizResults[quiz.id] === quiz.correct_option ? 'text-green-600' : 'text-red-600'}`}>
+                  {quizResults[quiz.id] === quiz.correct_option ? 'Correct ✅' : 'Incorrect ❌'}
+                  {quizResults[quiz.id] !== quiz.correct_option && (
+                    <div className="text-green-600">
+                      Correct answer: {quiz[`option_${quiz.correct_option.toLowerCase()}`]}
+                    </div>
+                  )}
+                  {quiz.explanation && (
+                    <span className="block text-gray-600">Explanation: {quiz.explanation}</span>
+                  )}
+                </p>
+              )}
+            </fieldset>
+          ))}
+
+          <button
+            type="button"
+            className={`px-6 py-2 rounded text-white ${isFormComplete && !isSubmitted ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 cursor-not-allowed'}`}
+            onClick={handleSubmit}
+            disabled={!isFormComplete || isSubmitted}
+            aria-disabled={!isFormComplete || isSubmitted}
+          >
+            Submit Quiz
+          </button>
+        </form>
+      </section>
 
       {score && (
         <div className="mt-6 text-lg font-semibold text-blue-700" role="status">
