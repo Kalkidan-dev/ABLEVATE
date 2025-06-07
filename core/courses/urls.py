@@ -7,7 +7,9 @@ from .views import (
     LessonListView,
     LessonCreateView,
     LessonUpdateView,
-    CourseEnrollmentView
+    CourseEnrollmentView,
+    QuizSubmissionCreateView,
+    MyQuizPerformanceView,
 )
 
 urlpatterns = [
@@ -22,7 +24,12 @@ urlpatterns = [
     
     path('lessons/create/', LessonCreateView.as_view(), name='lesson-create'),
     path('lessons/<int:pk>/update/', LessonUpdateView.as_view(), name='lesson-update'),
+    path('quiz-performance/', MyQuizPerformanceView.as_view(), name='quiz-performance-list'),  # GET user's quiz submissions
+    
+    # Quiz submissions tied to lessons
+    path('lessons/<int:lesson_id>/quiz-submissions/', QuizSubmissionCreateView.as_view(), name='quiz-submission-create'),  # POST submit quiz
 
     # Enrollment Endpoint
     path('enroll/', CourseEnrollmentView.as_view(), name='course-enroll'),
+    
 ]
