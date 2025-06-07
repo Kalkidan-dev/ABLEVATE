@@ -10,6 +10,7 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import ProtectedRoute from './routes/ProtectedRoute';
 import axios from 'axios';
 
+import CourseDetail from './components/course/CourseDetail';
 import Home from './pages/Home';
 import DashboardInstructor from './pages/DashboardInstructor';
 import DashboardStudent from './pages/DashboardStudent';
@@ -54,11 +55,16 @@ const App = () => {
                   } 
                 />
                 
+                <Route path="/courses/:id" element={<DashboardLayout><CourseDetail /></DashboardLayout>} />
+
                   <Route
                       path="/student-dashboard"
                       element={
                         <ProtectedRoute role="student">
-                          <DashboardStudent />
+                           <DashboardLayout>
+                            <DashboardStudent />
+                           </DashboardLayout>
+                          
                         </ProtectedRoute>
                       }
                     />
