@@ -3,7 +3,7 @@ import Sidebar from './Sidebar';
 import NavigationBar from './Navbar';
 
 const DashboardLayout = ({ children }) => {
-  const [isSidebarOpen, setSidebarOpen] = useState(false);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   return (
