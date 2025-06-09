@@ -1,4 +1,5 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import (
     CourseListView,
     CourseDetailView,
@@ -10,7 +11,12 @@ from .views import (
     CourseEnrollmentView,
     QuizSubmissionCreateView,
     MyQuizPerformanceView,
+    LessonViewSet  # <- Import your ViewSet
 )
+
+# Setup router for LessonViewSet
+router = DefaultRouter()
+router.register(r'lessons', LessonViewSet, basename='lesson')  # Enables /api/lessons/ and /api/lessons/{id}/quizzes/
 
 urlpatterns = [
     # Course Endpoints
@@ -19,17 +25,18 @@ urlpatterns = [
     path('create/', CourseCreateView.as_view(), name='course-create'),
     path('<int:pk>/edit/', CourseUpdateView.as_view(), name='course-update'),
 
-    # Lesson Endpoints
+    # Lesson Endpoints (non-ViewSet)
     path('<int:course_id>/lessons/', LessonListView.as_view(), name='lesson-list'),
-    
     path('lessons/create/', LessonCreateView.as_view(), name='lesson-create'),
     path('lessons/<int:pk>/update/', LessonUpdateView.as_view(), name='lesson-update'),
-    path('quiz-performance/', MyQuizPerformanceView.as_view(), name='quiz-performance-list'),  # GET user's quiz submissions
-    
-    # Quiz submissions tied to lessons
-    path('lessons/<int:lesson_id>/quiz-submissions/', QuizSubmissionCreateView.as_view(), name='quiz-submission-create'),  # POST submit quiz
+
+    # Quiz and performance
+    path('quiz-performance/', MyQuizPerformanceView.as_view(), name='quiz-performance-list'),
+    path('lessons/<int:lesson_id>/quiz-submissions/', QuizSubmissionCreateView.as_view(), name='quiz-submission-create'),
 
     # Enrollment Endpoint
     path('enroll/', CourseEnrollmentView.as_view(), name='course-enroll'),
-    
+
+    # Include ViewSet routes
+    path('api/', include(router.urls)),
 ]
