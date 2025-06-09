@@ -2,6 +2,9 @@ from rest_framework import generics, permissions
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
 from .models import Course, Lesson, Enrollment, QuizSubmission, LessonProgress
 from .serializers import (
@@ -14,7 +17,6 @@ from .serializers import (
 from .permissions import IsInstructorOrAdmin
 from core.accounts.permissions import IsInstructor, IsStudent
 
-# === COURSES ===
 
 class CourseListView(generics.ListAPIView):
     queryset = Course.objects.filter(is_published=True)
@@ -152,3 +154,16 @@ class LessonProgressUpdateView(generics.RetrieveUpdateAPIView):
 
     def get_serializer_context(self):
         return {'request': self.request}
+    
+
+
+class LessonViewSet(viewsets.ModelViewSet):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+
+    @action(detail=True, methods=['get'])
+    def quizzes(self, request, pk=None):
+        lesson = self.get_object()
+        quizzes = lesson.quizzes.all()  # related_name='quizzes'
+        serializer = QuizSerializer(quizzes, many=True)
+        return Response(serializer.data)
