@@ -110,30 +110,34 @@ useEffect(() => {
         <div className="bg-white p-6 rounded-xl shadow-md">
           <h2 className="text-xl font-semibold text-blue-700 mb-4">🎓 Your Courses</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {dashboard.enrolledCourses.map((course) => (
-                  <div
-                    key={course.id}
-                    onClick={() => {
-                      console.log("Selected course:", course); 
-                      if (course?.id) {
-                        setSelectedCourse(course);
-                        setSelectedLesson(null);
-                        
-                      } else {
-                        console.warn("No course ID found!", course);
-                      }
-                    }}
-                    className="cursor-pointer bg-blue-50 rounded-xl p-4 shadow hover:shadow-md transition"
-                  >
-                    <img
-                      src={course.image || 'https://via.placeholder.com/300x150'}
-                      alt={course.title}
-                      className="w-full h-32 object-cover rounded-md mb-2"
-                    />
-                    <h3 className="text-lg font-semibold text-blue-800">{course.title}</h3>
-                    <p className="text-sm text-gray-500">Status: {course.status}</p>
-                  </div>
-                ))}
+           {dashboard.enrolledCourses.length > 0 ? (
+          dashboard.enrolledCourses.map((course) => (
+            <div
+              key={course.id}
+              onClick={() => {
+                if (!course?.id) {
+                  console.warn("No course ID found!", course);
+                  return;
+                }
+                setSelectedCourse(course);
+                setSelectedLesson(null);
+              }}
+              className="cursor-pointer bg-blue-50 rounded-xl p-4 shadow hover:shadow-md transition"
+            >
+              <img
+                src={course.image || 'https://via.placeholder.com/300x150'}
+                alt={course.title}
+                className="w-full h-32 object-cover rounded-md mb-2"
+              />
+              <h3 className="text-lg font-semibold text-blue-800">{course.title}</h3>
+              <p className="text-sm text-gray-500">Status: {course.status || 'N/A'}</p>
+            </div>
+          ))
+        ) : (
+          <div className="text-center text-gray-500 col-span-full py-6">
+            You are not enrolled in any courses yet. 📭
+          </div>
+      )}
 
           </div>
 
