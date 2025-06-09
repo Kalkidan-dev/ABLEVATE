@@ -10,10 +10,7 @@ class QuizSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quiz
-        fields = [
-            'id', 'lesson', 'question', 'option_a', 'option_b',
-            'option_c', 'option_d', 'correct_option', 'created_at'
-        ]
+        fields = '__all__'
         read_only_fields = ['created_at', 'lesson']
 
     def create(self, validated_data):
@@ -42,12 +39,14 @@ class LessonSerializer(serializers.ModelSerializer):
     video_file = serializers.FileField(required=False, allow_null=True)
     video_url = serializers.URLField(required=False, allow_blank=True)
     captions = serializers.CharField(required=False, allow_blank=True)
+    has_quiz = serializers.SerializerMethodField()
 
     class Meta:
         model = Lesson
         fields = [
             'id', 'title', 'content', 'video_url', 'video_file', 'captions',
-            'alt_text', 'screen_reader_hint', 'order', 'course',
+            'alt_text', 'screen_reader_hint', 'order', 'course', 'has_quiz',
+            'created_at', 'audio_file', 'pdf_file', 'transcript',
             'downloadable_resource', 'quizzes'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
@@ -65,6 +64,9 @@ class LessonSerializer(serializers.ModelSerializer):
         for quiz_data in quizzes_data:
             Quiz.objects.create(lesson=lesson, **quiz_data)
         return lesson
+    
+    def get_has_quiz(self, obj):
+        return obj.quizzes.exists()
 
     def update(self, instance, validated_data):
         quizzes_data = validated_data.pop('quizzes', None)
@@ -125,6 +127,9 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class EnrollmentSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='course.id')
+    # title = serializers.CharField(source='course.title')
+
     class Meta:
         model = Enrollment
         fields = ['id', 'student', 'course', 'status']
@@ -134,8 +139,8 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 class LessonProgressSerializer(serializers.ModelSerializer):
     class Meta:
         model = LessonProgress
-        fields = ['lesson', 'completed', 'completed_at', 'viewed_at']
-        read_only_fields = ['completed_at', 'viewed_at']
+        fields = ['id','lesson', 'completed', 'completed_at', 'viewed_at']
+        read_only_fields = ['id','completed_at', 'viewed_at']
 
     def update(self, instance, validated_data):
         if validated_data.get('completed') and not instance.completed_at:
