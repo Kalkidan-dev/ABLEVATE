@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Course, Lesson, Enrollment
+from .models import Course, Lesson, Enrollment, Quiz
 
 @admin.register(Lesson)
 class LessonAdmin(admin.ModelAdmin):
@@ -25,3 +25,11 @@ class EnrollmentAdmin(admin.ModelAdmin):
     list_filter = ('course',)
     readonly_fields = ('enrolled_at',)  
     fields = ('student', 'course')  
+
+@admin.register(Quiz)
+class QuizAdmin(admin.ModelAdmin):
+    list_display = ('lesson', 'question', 'created_at')  # ✅ use 'question' instead of 'title'
+    search_fields = ('question',)
+    list_filter = ('lesson',)
+    fields = ('lesson', 'question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_option', 'created_at')
+    readonly_fields = ('created_at',)
