@@ -7,10 +7,13 @@ import { RoleProvider } from './context/RoleContext';
 
 import Layout from './components/layout/Layout';
 import DashboardLayout from './components/layout/DashboardLayout';
+import LessonDetailWrapper from './pages/LessonDetailWrapper';
 import ProtectedRoute from './routes/ProtectedRoute';
 import axios from 'axios';
 
+
 import CourseDetail from './components/course/CourseDetail';
+import LessonQuiz from './components/course/LessonQuiz';
 import Home from './pages/Home';
 import DashboardInstructor from './pages/DashboardInstructor';
 import DashboardStudent from './pages/DashboardStudent';
@@ -54,9 +57,15 @@ const App = () => {
 
                   } 
                 />
-                
-                <Route path="/courses/:id" element={<DashboardLayout><CourseDetail /></DashboardLayout>} />
+               
+                 
+                    <Route
+                      path="/courses/:courseId/lessons/:lessonId"
+                      element={<LessonDetailWrapper />}
+                    />
 
+                <Route path="/courses/:id" element={<DashboardLayout><CourseDetail /></DashboardLayout>} />
+                <Route path="/lessons/:lessonId/quiz" element={<LessonQuiz />} />
                   <Route
                       path="/student-dashboard"
                       element={
