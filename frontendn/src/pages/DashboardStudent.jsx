@@ -1,9 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../api/axiosInstance';
-import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import LessonModal from '../components/course/LessonModal'; // modal component
-import StatCard from '../components/dashboard/StatCard'; // extracted for reuse
+import LessonModal from '../components/course/LessonModal';
+import StatCard from '../components/dashboard/StatCard';
+
+// Voice recognition setup
+const recognition =
+  typeof window !== 'undefined' &&
+  (window.SpeechRecognition || window.webkitSpeechRecognition)
+    ? new (window.SpeechRecognition || window.webkitSpeechRecognition)()
+    : null;
 
 const StudentDashboard = () => {
   const [dashboard, setDashboard] = useState({
@@ -18,6 +24,9 @@ const StudentDashboard = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [lessons, setLessons] = useState([]);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [lessonIndex, setLessonIndex] = useState(0);
+  const [listening, setListening] = useState(false);
+  const [feedback, setFeedback] = useState('');
 
   const navigate = useNavigate();
 
@@ -25,15 +34,16 @@ const StudentDashboard = () => {
     try {
       const res = await axiosInstance.get(`/courses/${courseId}/lessons/`);
       setLessons(res.data);
+      setLessonIndex(0); // reset index
+      setSelectedLesson(res.data[0]); // show first lesson
     } catch (err) {
       console.error('Failed to load lessons:', err);
     }
   };
-useEffect(() => {
-  if (selectedCourse?.id) {
-    fetchLessons(selectedCourse.id);
-  }
-}, [selectedCourse]);
+
+  useEffect(() => {
+    if (selectedCourse?.id) fetchLessons(selectedCourse.id);
+  }, [selectedCourse]);
 
   useEffect(() => {
     const token = localStorage.getItem('access');
@@ -55,12 +65,105 @@ useEffect(() => {
     fetchData();
   }, []);
 
+  // Voice command logic
+  useEffect(() => {
+    if (!recognition) return;
+
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript.toLowerCase().trim();
+      setFeedback(`You said: "${transcript}"`);
+
+      // Command logic
+      if (transcript.includes("start course")) {
+        if (dashboard.enrolledCourses.length > 0) {
+          const firstCourse = dashboard.enrolledCourses[0];
+          setSelectedCourse(firstCourse);
+        }
+      } else if (transcript.includes("next lesson")) {
+        if (lessons.length > lessonIndex + 1) {
+          setSelectedLesson(lessons[lessonIndex + 1]);
+          setLessonIndex(prev => prev + 1);
+        } else {
+          setFeedback("You're at the last lesson.");
+        }
+      } else if (transcript.includes("go back")) {
+        if (lessonIndex > 0) {
+          setSelectedLesson(lessons[lessonIndex - 1]);
+          setLessonIndex(prev => prev - 1);
+        } else {
+          setFeedback("You're at the first lesson.");
+        }
+      } else if (transcript.includes("open notifications")) {
+        setShowNotifications(true);
+      } else if (transcript.includes("close notifications")) {
+        setShowNotifications(false);
+      } else if (transcript.includes("logout")) {
+        navigate('/logout');
+      } else if (transcript.startsWith("show course")) {
+        const courseTitle = transcript.replace("show course", "").trim();
+        const course = dashboard.enrolledCourses.find(c =>
+          c.title.toLowerCase().includes(courseTitle)
+        );
+        if (course) {
+          setSelectedCourse(course);
+        } else {
+          setFeedback(`Course "${courseTitle}" not found`);
+        }
+      } else if (transcript.includes("go to quiz") && selectedLesson?.id) {
+        navigate(`/lessons/${selectedLesson.id}/quiz`);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      setFeedback(`Error: ${event.error}`);
+      setListening(false);
+    };
+
+    recognition.onend = () => setListening(false);
+  }, [dashboard.enrolledCourses, lessons, lessonIndex, selectedLesson, navigate]);
+
+  const toggleListening = () => {
+    if (!recognition) {
+      setFeedback('Speech recognition not supported.');
+      return;
+    }
+
+    if (listening) {
+      recognition.stop();
+    } else {
+      recognition.start();
+      setFeedback('🎤 Listening...');
+    }
+
+    setListening(!listening);
+  };
+
+  if (!recognition) {
+    return <div className="text-center text-red-600">Your browser does not support voice recognition.</div>;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-8 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
+        {/* Voice Mic Button */}
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={toggleListening}
+            className={`px-4 py-2 rounded-full text-white ${listening ? 'bg-red-500' : 'bg-blue-600'}`}
+            title="Click to use voice"
+          >
+            🎤 {listening ? 'Stop' : 'Speak'}
+          </button>
+        </div>
 
-        {/* Welcome */}
-        <div className="flex flex-col md:flex-row items-center justify-between bg-white rounded-2xl shadow-lg p-6 relative">
+        {feedback && <p className="text-sm text-gray-500 mb-2">{feedback}</p>}
+
+        {/* Welcome Header */}
+        <div className="flex flex-col md:flex-row items-center justify-between bg-white rounded-2xl shadow-lg p-6">
           <div className="flex items-center space-x-4">
             <img
               src="https://via.placeholder.com/64"
@@ -69,130 +172,33 @@ useEffect(() => {
             />
             <div>
               <h1 className="text-3xl font-bold text-blue-700">Welcome, {dashboard.username}</h1>
-              <p className="text-gray-600">Ready to continue learning today? 🎯</p>
+              <p className="text-gray-500">Your progress overview</p>
             </div>
-          </div>
-
-          {/* Notifications */}
-          <div className="relative mt-4 md:mt-0">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 bg-blue-100 rounded-full hover:bg-blue-200"
-            >
-              <Bell className="text-blue-600 w-6 h-6" />
-              {notifications.length > 0 && (
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 rounded-full">
-                  {notifications.length}
-                </span>
-              )}
-            </button>
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-64 bg-white border shadow-lg rounded-lg z-10 p-2">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">Notifications</h3>
-                {notifications.map((note) => (
-                  <div key={note.id} className="text-sm text-gray-600 mb-1 border-b pb-1">
-                    {note.text}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard label="Enrolled" value={dashboard.total} color="blue" />
-          <StatCard label="Completed" value={dashboard.completed} color="green" />
-          <StatCard label="In Progress" value={dashboard.inProgress} color="yellow" />
+          <StatCard label="Total Courses" value={dashboard.total} />
+          <StatCard label="In Progress" value={dashboard.inProgress} />
+          <StatCard label="Completed" value={dashboard.completed} />
         </div>
 
-        {/* Courses */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-xl font-semibold text-blue-700 mb-4">🎓 Your Courses</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-           {dashboard.enrolledCourses.length > 0 ? (
-          dashboard.enrolledCourses.map((course) => (
-            <div
-              key={course.id}
-              onClick={() => {
-                if (!course?.id) {
-                  console.warn("No course ID found!", course);
-                  return;
-                }
-                setSelectedCourse(course);
-                setSelectedLesson(null);
-              }}
-              className="cursor-pointer bg-blue-50 rounded-xl p-4 shadow hover:shadow-md transition"
-            >
-              <img
-                src={course.image || 'https://via.placeholder.com/300x150'}
-                alt={course.title}
-                className="w-full h-32 object-cover rounded-md mb-2"
-              />
-              <h3 className="text-lg font-semibold text-blue-800">{course.title}</h3>
-              <p className="text-sm text-gray-500">Status: {course.status || 'N/A'}</p>
-            </div>
-          ))
-        ) : (
-          <div className="text-center text-gray-500 col-span-full py-6">
-            You are not enrolled in any courses yet. 📭
+        {/* Notifications */}
+        {showNotifications && (
+          <div className="bg-white p-4 rounded-lg shadow-md">
+            <h2 className="text-lg font-semibold">🔔 Notifications</h2>
+            <ul className="mt-2 space-y-2">
+              {notifications.map((noti, index) => (
+                <li key={index} className="text-sm text-gray-700">
+                  • {noti.message}
+                </li>
+              ))}
+            </ul>
           </div>
-      )}
+        )}
 
-          </div>
-
-          {/* Lessons */}
-          {selectedCourse && (
-            <div className="mt-8">
-              <h2 className="text-xl font-semibold text-blue-700 mb-4">
-                📚 Lessons in {selectedCourse.title}
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {lessons.map((lesson) => (
-                  <div
-                    key={lesson.id}
-                    className="bg-white p-4 rounded shadow border hover:shadow-md transition"
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h3 className="font-bold text-blue-700">{lesson.title}</h3>
-                        <p className="text-sm text-gray-500 truncate">{lesson.video_file}</p>
-                        
-                      </div>
-                      <button
-                        onClick={() => setSelectedLesson(lesson)}
-                        className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                      >
-                        View
-                      </button>
-                    </div>
-                    <div className="mt-2">
-                      <div className="h-2 w-full bg-gray-200 rounded">
-                        <div
-                          className="h-full bg-green-500 rounded"
-                          style={{ width: `${lesson.progress || 0}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {lesson.progress || 0}% completed
-                      </p>
-                    </div>
-                    {lesson.has_quiz && (
-                      <button
-                        onClick={() => navigate(`/lessons/${lesson.id}/quiz`)}
-                        className="mt-3 text-sm bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-                      >
-                        Take Quiz
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Modal for lesson */}
+        {/* Lesson Modal */}
         {selectedLesson && (
           <LessonModal
             lesson={selectedLesson}
