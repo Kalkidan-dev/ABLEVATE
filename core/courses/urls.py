@@ -11,7 +11,8 @@ from .views import (
     CourseEnrollmentView,
     QuizSubmissionCreateView,
     MyQuizPerformanceView,
-    LessonViewSet  # <- Import your ViewSet
+    LessonViewSet
+    
 )
 
 # Setup router for LessonViewSet
@@ -32,11 +33,12 @@ urlpatterns = [
 
     # Quiz and performance
     path('quiz-performance/', MyQuizPerformanceView.as_view(), name='quiz-performance-list'),
+    
     path('lessons/<int:lesson_id>/quiz-submissions/', QuizSubmissionCreateView.as_view(), name='quiz-submission-create'),
 
     # Enrollment Endpoint
     path('enroll/', CourseEnrollmentView.as_view(), name='course-enroll'),
 
     # Include ViewSet routes
-    path('api/', include(router.urls)),
+    path('', include(router.urls)),
 ]
