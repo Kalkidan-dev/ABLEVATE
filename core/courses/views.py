@@ -5,6 +5,9 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .serializers import QuizSerializer
+
 
 from .models import Course, Lesson, Enrollment, QuizSubmission, LessonProgress
 from .serializers import (
@@ -160,10 +163,15 @@ class LessonProgressUpdateView(generics.RetrieveUpdateAPIView):
 class LessonViewSet(viewsets.ModelViewSet):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
+    permission_classes = [IsAuthenticated]
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=['get'], url_path='quizzes')
     def quizzes(self, request, pk=None):
-        lesson = self.get_object()
-        quizzes = lesson.quizzes.all()  # related_name='quizzes'
-        serializer = QuizSerializer(quizzes, many=True)
-        return Response(serializer.data)
+        try:
+            lesson = self.get_object()
+            quizzes = lesson.quizzes.all()  # assuming related_name="quizzes"
+            serializer = QuizSerializer(quizzes, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            print(f"Error in quizzes endpoint: {e}")
+            return Response({"error": str(e)}, status=500)
