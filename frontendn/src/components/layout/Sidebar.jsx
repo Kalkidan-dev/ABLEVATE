@@ -1,24 +1,22 @@
-import React, { useEffect, useState } from 'react';
+// src/components/Sidebar.jsx
+import React, { useContext, useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Home, BookOpen, Settings, LogOut } from 'lucide-react';
-import { jwtDecode } from 'jwt-decode';
+import { AuthContext } from '../../context/AuthContext'; // Adjust path if needed
 
 const Sidebar = () => {
   const location = useLocation();
+  const { role: contextRole } = useContext(AuthContext);
   const [role, setRole] = useState(null);
 
-  // Decode token once on load
   useEffect(() => {
-    const token = localStorage.getItem('access');
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setRole(decoded?.role || null);
-      } catch (error) {
-        console.error('Invalid token:', error);
-      }
+    const storedRole = localStorage.getItem('role');
+    if (storedRole) {
+      setRole(storedRole);
+    } else if (contextRole) {
+      setRole(contextRole);
     }
-  }, []);
+  }, [contextRole]);
 
   const isActive = (path) => location.pathname === path;
 
@@ -60,11 +58,13 @@ const Sidebar = () => {
           </>
         );
       default:
-        return (
-          <p className="text-sm text-gray-500">No role assigned</p>
-        );
+        return <p className="text-sm text-gray-500">No role assigned</p>;
     }
   };
+
+  if (role === null) {
+    return null; // Prevent "guest" flash while loading
+  }
 
   return (
     <aside className="fixed z-20 h-full w-64 bg-white dark:bg-gray-900 shadow-lg">
@@ -78,7 +78,7 @@ const Sidebar = () => {
           />
           <div>
             <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">Welcome</p>
-            <p className="text-xs text-gray-500 capitalize">{role || 'guest'}</p>
+            <p className="text-xs text-gray-500 capitalize">{role}</p>
           </div>
         </div>
       </div>
