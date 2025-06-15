@@ -10,6 +10,8 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import LessonDetailWrapper from './pages/LessonDetailWrapper';
 import ProtectedRoute from './routes/ProtectedRoute';
 import axios from 'axios';
+import LessonPage from './pages/LessonPage';
+import CourseDetailPage from './pages/CourseDetailPage';
 
 
 import CourseDetail from './components/course/CourseDetail';
@@ -44,6 +46,23 @@ const App = () => {
                 <Route path="/" element={<Layout><Home /></Layout>} />
                 <Route path="/login" element={<Layout><Login /></Layout>} />
                 <Route path="/sidebar" element={<Sidebar />} />
+
+                
+
+                <Route path="/lessons/:lessonId" element={<LessonPage />} />
+                <Route
+                      path="/courses/:courseId"
+                      element={
+                        <ProtectedRoute role="student">
+                           <DashboardLayout>
+                            <CourseDetailPage />
+                           </DashboardLayout>
+                          
+                        </ProtectedRoute>
+                      }
+                    />
+                
+
 
                 {/* Protected routes */}
                 <Route 
