@@ -1,0 +1,63 @@
+/* voiceCommands.css */
+
+/* Floating mic button */
+.voice-mic-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #2563eb; /* blue-600 */
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.voice-mic-button:hover {
+  background-color: #1d4ed8; /* blue-700 */
+}
+
+/* Transcript display box */
+.voice-transcript-box {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  background: #f9fafb; /* light gray */
+  color: #1f2937; /* text-gray-800 */
+  padding: 12px 16px;
+  max-width: 300px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 14px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  z-index: 9998;
+  word-wrap: break-word;
+}
+
+/* Optional: Screen reader toggle button */
+.screen-reader-toggle {
+  position: fixed;
+  bottom: 160px;
+  right: 20px;
+  background: #10b981; /* emerald-500 */
+  color: white;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  z-index: 9997;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.screen-reader-toggle:hover {
+  background: #059669; /* emerald-600 */
+}
