@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
 import '../styles/Home.css';
+import BrailleImg from '../assets/BrailleImg.jpg';
+import VoiceImg from '../assets/VoiceImg.jpg';
+import RoleImg from '../assets/RoleImg.jpg';
 
 const recognition =
   typeof window !== 'undefined' &&
@@ -50,7 +52,7 @@ const Home = () => {
       recognition.stop();
     } else {
       recognition.start();
-      setFeedback('Listening...');
+      setFeedback('🎧 Listening...');
     }
 
     setListening(!listening);
@@ -58,58 +60,77 @@ const Home = () => {
 
   return (
     <>
-      
       <div className="home-container">
-        <h1>Welcome to ABLEVATE</h1>
-        <p>
-          An inclusive learning platform for visually and hearing-impaired students. Empower your education with assistive technology and accessible content.
-        </p>
 
-        <div className="home-search-group">
-            <input
-              type="text"
-              className="home-search-input"
-              placeholder="Search courses, topics, or instructors..."
-              aria-label="Search"
-            />
-            <button className="home-search-btn">🔍 Search</button>
-          </div>
-
-
-        <div className="voice-control">
+        <div className="mic-top-right">
           <button
             onClick={toggleListening}
             aria-pressed={listening}
-            className={`mic-button ${listening ? 'mic-active' : ''}`}
+            className={`mic-button small ${listening ? 'mic-active' : ''}`}
             title={listening ? 'Stop microphone' : 'Start microphone'}
           >
             🎤
           </button>
-          <p className="mic-feedback">
-            {feedback || 'Click mic to say "Login" or "Register"'}
+        </div>
+
+        <header className="home-hero">
+          <h1>Welcome to <span className="brand">ABLEVATE</span></h1>
+          <p className="subtext">
+            Inclusive learning for visually & hearing-impaired students.
+            
           </p>
+        </header>
+
+        <div className="home-search-group">
+          <input
+            type="text"
+            className="home-search-input"
+            placeholder="Search courses, topics, or instructors..."
+            aria-label="Search"
+          />
+          <button className="home-search-btn">🔍 Search</button>
+        </div>
+
+        <div className="mic-feedback">
+          {feedback || 'Say "Login" or "Register" for voice navigation'}
         </div>
 
         <section className="features">
-          <div className="feature-card">
-            <h3>Braille-Compatible Content</h3>
-            <p>All text content is formatted to support Braille devices and displays.</p>
-          </div>
-          <div className="feature-card">
-            <h3>Voice & Caption Support</h3>
-            <p>Courses include voice control, captions, and optional sign language videos.</p>
-          </div>
-          <div className="feature-card">
-            <h3>Role-Based Access</h3>
-            <p>Students, instructors, and admins enjoy tailored experiences.</p>
+         
+          <div className="features-grid">
+
+            <div className="feature-card">
+              <img src={BrailleImg} alt="Braille Compatible" className="feature-img-large" />
+              <div className="feature-text">
+                <h4>Braille-Compatible</h4>
+                <p>Formatted text content that supports Braille displays and readers.</p>
+              </div>
+            </div>
+
+            <div className="feature-card">
+              <img src={VoiceImg} alt="Voice and Captions" className="feature-img-large" />
+              <div className="feature-text">
+                <h4>Voice & Captions</h4>
+                <p>All lessons include audio, captions, and optional sign language.</p>
+              </div>
+            </div>
+
+            <div className="feature-card">
+              <img src={RoleImg} alt="Role-Based Access" className="feature-img-large" />
+              <div className="feature-text">
+                <h4>Role-Based Access</h4>
+                <p>Personalized experience for students, instructors, and admins.</p>
+              </div>
+            </div>
+
           </div>
         </section>
       </div>
 
       <footer className="footer">
-        <p>© 2025 ABLEVATE. All rights reserved.</p>
-        <p>
-          <Link to="/about">About</Link> | <Link to="/contact">Contact</Link> | <Link to="/privacy">Privacy Policy</Link>
+        <p>© 2025 <span className="brand">ABLEVATE</span>. All rights reserved.</p>
+        <p className="footer-links">
+          <Link to="/about">About</Link> | <Link to="/contact">Contact</Link> | <Link to="/privacy">Privacy</Link>
         </p>
       </footer>
     </>
