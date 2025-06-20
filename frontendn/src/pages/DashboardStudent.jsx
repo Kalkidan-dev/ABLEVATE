@@ -155,26 +155,13 @@ const StudentDashboard = () => {
   };
 
   const filteredCourses = dashboard.enrolledCourses.filter(course =>
-  course.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-);
-
+    course.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white py-8 px-4">
       <div className="max-w-6xl mx-auto space-y-8">
-        {/* Voice Mic */}
-        <div className="flex justify-end mb-2">
-          <button
-            onClick={toggleListening}
-            aria-label="Toggle voice recognition"
-            className={`px-4 py-2 rounded-full text-white ${listening ? 'bg-red-500' : 'bg-blue-600'}`}
-          >
-            🎤 {listening ? 'Stop' : 'Speak'}
-          </button>
-        </div>
-        {feedback && <p className="text-sm text-gray-600 mb-2" role="status">{feedback}</p>}
-
-        {/* Welcome and Notifications */}
+        {/* Welcome and Notifications with Voice Button */}
         <div className="flex flex-col md:flex-row items-center justify-between bg-white rounded-2xl shadow-lg p-6">
           <div className="flex items-center space-x-4">
             <img
@@ -185,8 +172,21 @@ const StudentDashboard = () => {
             <div>
               <h1 className="text-3xl font-bold text-blue-700">Welcome, {dashboard.username}</h1>
               <p className="text-gray-600">Ready to continue learning today? 🎯</p>
+              <div className="mt-2">
+                <button
+                  onClick={toggleListening}
+                  aria-label="Toggle voice recognition"
+                  className={`px-3 py-1 rounded-full text-sm text-white ${listening ? 'bg-red-500' : 'bg-blue-600'}`}
+                >
+                  🎤 {listening ? 'Stop' : 'Speak'}
+                </button>
+                {feedback && (
+                  <p className="text-xs text-gray-500 mt-1">{feedback}</p>
+                )}
+              </div>
             </div>
           </div>
+
           <div className="relative mt-4 md:mt-0">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
@@ -220,29 +220,29 @@ const StudentDashboard = () => {
           <StatCard label="In Progress" value={dashboard.inProgress} color="yellow" />
         </div>
 
-        {/* Enrolled Courses (Original + Integrated View Button) */}
+        {/* Enrolled Courses */}
         <div className="bg-white p-6 rounded-xl shadow-md">
           <h2 className="text-xl font-semibold text-blue-700 mb-4">🎓 Your Enrolled Courses</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {filteredCourses.length > 0 ? (
-            filteredCourses.map(course => (
-              <div key={course.id} className="bg-white p-4 rounded shadow hover:shadow-md">
-                <h3 className="text-xl font-bold">{course.title}</h3>
-                <p className="text-sm text-gray-600">{course.description}</p>
-                <button
-                  onClick={() => navigate(`/courses/${course.id}`)}
-                  className="mt-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                >
-                  View Lessons
-                </button>
-              </div>
-           
-            ))
-          ) : (
-            <p className="text-gray-500">No courses found matching "{debouncedSearchTerm}"</p>
-          )}
+              filteredCourses.map(course => (
+                <div key={course.id} className="bg-white p-4 rounded shadow hover:shadow-md">
+                  <h3 className="text-xl font-bold">{course.title}</h3>
+                  <p className="text-sm text-gray-600">{course.description}</p>
+                  <button
+                    onClick={() => navigate(`/courses/${course.id}`)}
+                    className="mt-2 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                  >
+                    View Lessons
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No courses found matching "{debouncedSearchTerm}"</p>
+            )}
+          </div>
         </div>
-      </div>
+
         {/* Lessons */}
         {selectedCourse && (
           <div className="mt-8">
