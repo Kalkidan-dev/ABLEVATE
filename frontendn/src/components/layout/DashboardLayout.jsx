@@ -1,3 +1,4 @@
+// src/layouts/DashboardLayout.jsx
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import NavigationBar from './Navbar';
@@ -7,29 +8,35 @@ const DashboardLayout = ({ children }) => {
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Topbar Row */}
-      <div className="flex w-full h-16">
-        <div className="w-1/5 bg-blue-800 text-white flex items-center px-4">
-          <button onClick={toggleSidebar} className="mr-4 text-2xl focus:outline-none">☰</button>
-          <span className="text-lg font-bold select-none">ABLEVATE</span>
-        </div>
-        <div className="w-4/5 overflow-hidden">
-          <NavigationBar />
-        </div>
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#e0f7fd] to-white">
+      
+      {/* Top Navigation Bar */}
+      <div className="relative z-40">
+        <NavigationBar />
+        {/* Sidebar toggle button (top-left corner) */}
+        <button
+          onClick={toggleSidebar}
+          className="absolute top-4 left-4 text-white text-2xl z-50 lg:hidden"
+          aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+          aria-expanded={isSidebarOpen}
+        >
+          ☰
+        </button>
       </div>
 
-      {/* Main Body Row: Sidebar + Content */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar (horizontal beside main content) */}
-        {isSidebarOpen && (
-          <div className="w-64 bg-gray-200">
-            <Sidebar isOpen={isSidebarOpen} toggle={toggleSidebar} />
-          </div>
-        )}
+      {/* Body Section */}
+      <div className="flex flex-1 overflow-hidden min-h-0">
+        {/* Sidebar */}
+        <div
+          className={`transition-all duration-300 ease-in-out bg-[#e0f7fd] shadow-inner border-r border-[#3ac6f5] 
+            ${isSidebarOpen ? 'w-64' : 'w-0'} 
+            overflow-hidden`}
+        >
+          <Sidebar isOpen={isSidebarOpen} toggle={toggleSidebar} />
+        </div>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 bg-gray-100 overflow-y-auto min-h-0">
+        <main className="flex-1 overflow-y-auto p-6 bg-blue-50 text-blue-800 min-h-0">
           {children}
         </main>
       </div>

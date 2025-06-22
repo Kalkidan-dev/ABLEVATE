@@ -4,14 +4,10 @@ import axios from 'axios';
 import useVoiceControl from '../../hooks/useVoiceControl';
 import useVoiceCommands from '../../hooks/useVoiceCommands';
 import { useAuth } from '../../context/AuthContext';
+import Logo from '../../assets/Logo.png';
 
 const LoginForm = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    remember: false,
-  });
-
+  const [formData, setFormData] = useState({ email: '', password: '', remember: false });
   const [showPassword, setShowPassword] = useState(false);
   const [feedback, setFeedback] = useState('');
   const [listening, setListening] = useState(false);
@@ -22,10 +18,6 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
-
-    console.log('Submitted email:', formData.email);
-    console.log('Submitted password:', formData.password);
-
     if (!formData.email || !formData.password) {
       setFeedback('Email and password are required');
       return;
@@ -33,32 +25,22 @@ const LoginForm = () => {
 
     try {
       setLoading(true);
-
       const res = await axios.post('http://localhost:8000/api/token/', {
         email: formData.email,
         password: formData.password,
       });
 
       const { access, refresh, role } = res.data;
-      console.log('ROLE FROM BACKEND:', role);
-
       localStorage.setItem('access', access);
       localStorage.setItem('refresh', refresh);
       localStorage.setItem('role', role);
+      localStorage.setItem('email', formData.email);
 
       login({ token: access, role });
-
       setFeedback('Login successful!');
-
-      if (role === 'student') {
-        navigate('/student-dashboard');
-      } else if (role === 'instructor') {
-        navigate('/instructor-dashboard');
-      } else if (role === 'admin') {
-        navigate('/admin-panel');
-      } else {
-        navigate('/');
-      }
+      navigate(role === 'student' ? '/student-dashboard' :
+               role === 'instructor' ? '/instructor-dashboard' :
+               role === 'admin' ? '/admin-panel' : '/');
     } catch (err) {
       console.error('Login error:', err);
       setFeedback('Login failed. Please check your credentials.');
@@ -69,18 +51,10 @@ const LoginForm = () => {
 
   const handleVoiceCommand = useVoiceCommands({
     formData,
-    setFormData: (newData) =>
-      setFormData((prev) => ({
-        ...prev,
-        ...newData,
-      })),
+    setFormData: (newData) => setFormData((prev) => ({ ...prev, ...newData })),
     setShowPassword,
-    handleSubmit: () => {
-      // Delay to allow state to update before submission
-      setTimeout(() => {
-        handleSubmit();
-      }, 100);
-    },
+    handleSubmit, 
+    // handleSubmit: () => setTimeout(() => handleSubmit(), 100),
     setFeedback,
     navigate,
   });
@@ -88,65 +62,72 @@ const LoginForm = () => {
   const toggleListening = useVoiceControl(handleVoiceCommand, setListening);
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 border rounded-md shadow-md bg-white">
-      <h2 className="text-2xl font-bold mb-4">Login</h2>
+    <div className="w-[380px] h-[460px] bg-white rounded-xl shadow-xl mx-auto mt-20 p-5 flex flex-col justify-between">
+      {/* Logo + Title */}
+      <div className="flex flex-col items-center">
+        <img src={Logo} alt="ABLEVATE Logo" className="h-12 mb-2" />
+        <h2 className="text-xl font-bold text-gray-800">Welcome Back</h2>
+      </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-3 mt-4 px-1 text-sm">
         <div>
-          <label className="block font-medium">Email</label>
+          <label className="block text-gray-600 font-medium">Email</label>
           <input
             type="email"
-            className="w-full border px-3 py-2 rounded"
             value={formData.email}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, email: e.target.value }))
-            }
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
             required
           />
         </div>
 
         <div>
-          <label className="block font-medium">Password</label>
+          <label className="block text-gray-600 font-medium">Password</label>
           <input
             type={showPassword ? 'text' : 'password'}
-            className="w-full border px-3 py-2 rounded"
             value={formData.password}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, password: e.target.value }))
-            }
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-300"
             required
           />
         </div>
 
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={formData.remember}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, remember: e.target.checked }))
-            }
-          />
-          <label>Remember Me</label>
+        <div className="flex justify-between items-center text-gray-600 text-xs">
+          <label className="flex items-center gap-1">
+            <input
+              type="checkbox"
+              checked={formData.remember}
+              onChange={(e) => setFormData({ ...formData, remember: e.target.checked })}
+            />
+            Remember Me
+          </label>
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="text-blue-600 hover:underline"
+          >
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
         </div>
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
           disabled={loading}
+          className="w-full mt-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded transition"
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
+
+        {feedback && <p className="text-center text-red-600 text-sm">{feedback}</p>}
       </form>
 
-      {feedback && (
-        <div className="mt-4 text-sm text-red-600 font-medium">{feedback}</div>
-      )}
-
+      {/* Voice Control Button */}
       <button
         onClick={toggleListening}
-        className={`mt-4 px-4 py-2 rounded ${
-          listening ? 'bg-red-500' : 'bg-green-500'
-        } text-white`}
+        className={`w-full mt-2 py-2 rounded text-white font-medium ${
+          listening ? 'bg-red-600' : 'bg-green-600'
+        } hover:opacity-90 transition`}
       >
         {listening ? 'Stop Voice Control' : 'Start Voice Control'}
       </button>

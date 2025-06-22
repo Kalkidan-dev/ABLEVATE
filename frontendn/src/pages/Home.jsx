@@ -74,9 +74,9 @@ const Home = () => {
         </div>
 
         <header className="home-hero">
-          <h1>Welcome to <span className="brand">ABLEVATE</span></h1>
+          <h1><span className="brand">Welcome to ABLEVATE</span></h1>
           <p className="subtext">
-            Inclusive learning for visually & hearing-impaired students.
+            Want to Learn Without limits? Say hello to ABLEVATE!
             
           </p>
         </header>
@@ -103,7 +103,7 @@ const Home = () => {
               <img src={BrailleImg} alt="Braille Compatible" className="feature-img-large" />
               <div className="feature-text">
                 <h4>Braille-Compatible</h4>
-                <p>Formatted text content that supports Braille displays and readers.</p>
+                <p>BRF-ready learning materials, perfectly tailored for Braille displays.</p>
               </div>
             </div>
 
