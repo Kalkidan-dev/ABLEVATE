@@ -91,8 +91,7 @@ const App = () => {
                         <ProtectedRoute role="student">
                            <DashboardLayout>
                             <DashboardStudent />
-                           </DashboardLayout>
-                          
+                          </DashboardLayout>
                         </ProtectedRoute>
                       }
                     />
